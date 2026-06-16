@@ -16,17 +16,10 @@ export default function Admin() {
     title: "", date: "", location: "", description: "", price: "", active: true
   });
 
-  useEffect(() => {
+useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-      fetchRegistrations();
-    }
-  }, [user]);
 
   const fetchEvents = async () => {
     const snapshot = await getDocs(collection(db, "events"));
@@ -37,6 +30,13 @@ export default function Admin() {
     const snapshot = await getDocs(collection(db, "registrations"));
     setRegistrations(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchEvents();
+      fetchRegistrations();
+    }
+  }, [user]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
