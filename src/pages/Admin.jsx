@@ -17,6 +17,8 @@ export default function Admin() {
 
   const [activeTab, setActiveTab] = useState("events");
 
+  const [editingPast, setEditingPast] = useState(null);
+
   const [newEvent, setNewEvent] = useState({
     title: "", date: "", location: "", description: "", price: "", active: true
   });
@@ -48,6 +50,17 @@ export default function Admin() {
   const fetchWaterSignups = async () => {
     const snapshot = await getDocs(collection(db, "waterSignups"));
     setWaterSignups(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
+  const handleDeleteWaterSignup = async (id) => {
+    if (confirm("Opravdu smazat tuto přihlášku na Vodu?")) {
+      await deleteDoc(doc(db, "waterSignups", id));
+      fetchWaterSignups();
+    }
+  };
+
+  const updateRank = async (id, rank) => {
+    await updateDoc(doc(db, "waterSignups", id), { rank });
+    fetchWaterSignups();
   };
 
   useEffect(() => {
@@ -87,14 +100,34 @@ export default function Admin() {
     }
   };
 
-  const handleAddPast = async (e) => {
+  const handleSubmitPast = async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "pastEvents"), {
-      ...newPast,
-      year: Number(newPast.year),
-    });
+    if (editingPast) {
+      await updateDoc(doc(db, "pastEvents", editingPast), {
+        ...newPast,
+        year: Number(newPast.year),
+      });
+      setEditingPast(null);
+    } else {
+      await addDoc(collection(db, "pastEvents"), {
+        ...newPast,
+        year: Number(newPast.year),
+      });
+    }
     setNewPast({ year: "", title: "", description: "", youtubeUrl: "" });
     fetchPastEvents();
+    setActiveTab("past");
+  };
+
+  const handleEditPast = (p) => {
+    setNewPast({
+      year: p.year,
+      title: p.title,
+      description: p.description,
+      youtubeUrl: p.youtubeUrl,
+    });
+    setEditingPast(p.id);
+    setActiveTab("addPast");
   };
 
   const handleDeletePast = async (id) => {
@@ -243,6 +276,7 @@ export default function Admin() {
                   <td>{p.description}</td>
                   <td><a href={p.youtubeUrl} target="_blank" rel="noreferrer">Video</a></td>
                   <td>
+                    <button className="btn-edit" onClick={() => handleEditPast(p)}>Upravit</button>
                     <button className="btn-delete" onClick={() => handleDeletePast(p.id)}>Smazat</button>
                   </td>
                 </tr>
@@ -254,8 +288,8 @@ export default function Admin() {
 
       {activeTab === "addPast" && (
         <div className="admin-section">
-          <h2>Přidat minulou vodu</h2>
-          <form className="admin-form" onSubmit={handleAddPast}>
+          <h2>{editingPast ? "Upravit vodu" : "Přidat minulou vodu"}</h2>
+          <form className="admin-form" onSubmit={handleSubmitPast}>
             <input placeholder="Rok (např. 2024)" type="number" value={newPast.year}
               onChange={e => setNewPast({ ...newPast, year: e.target.value })} required />
             <input placeholder="Název (např. #Symfonie – Voda 2024)" value={newPast.title}
@@ -264,7 +298,7 @@ export default function Admin() {
               onChange={e => setNewPast({ ...newPast, description: e.target.value })} required />
             <input placeholder="YouTube URL" value={newPast.youtubeUrl}
               onChange={e => setNewPast({ ...newPast, youtubeUrl: e.target.value })} required />
-            <button type="submit">Přidat 🎬</button>
+            <button type="submit">{editingPast ? "Uložit změny ✏️" : "Přidat 🎬"}</button>
           </form>
         </div>
       )}
@@ -275,6 +309,7 @@ export default function Admin() {
           <table className="admin-table">
             <thead>
               <tr>
+                <th>Hodnost</th>
                 <th>Jméno na tričku</th>
                 <th>Email</th>
                 <th>Velikost</th>
@@ -282,11 +317,33 @@ export default function Admin() {
                 <th>Délka pobytu</th>
                 <th>Doprava</th>
                 <th>Zaplaceno</th>
+                <th>Akce</th>
               </tr>
             </thead>
             <tbody>
               {waterSignups.map(s => (
                 <tr key={s.id}>
+                  <td>
+                    <select
+                      className="admin-rank-select"
+                      value={s.rank || ""}
+                      onChange={e => updateRank(s.id, e.target.value)}
+                    >
+                      <option value="">—</option>
+                      <option value="Plavčík">Plavčík</option>
+                      <option value="Plavčice">Plavčice</option>
+                      <option value="Kadet">Kadet</option>
+                      <option value="Kadetka">Kadetka</option>
+                      <option value="Důstojník">Důstojník</option>
+                      <option value="Důstojnice">Důstojnice</option>
+                      <option value="Kapitán">Kapitán</option>
+                      <option value="Kapitánka">Kapitánka</option>
+                      <option value="Komodor">Komodor</option>
+                      <option value="Komodorka">Komodorka</option>
+                      <option value="Admirál">Admirál</option>
+                      <option value="Admirálka">Admirálka</option>
+                    </select>
+                  </td>
                   <td>{s.shirtName}</td>
                   <td>{s.email}</td>
                   <td>{s.shirtSize}</td>
@@ -303,6 +360,9 @@ export default function Admin() {
                       checked={s.paid || false}
                       onChange={() => togglePaid(s.id, s.paid)}
                     />
+                  </td>
+                  <td>
+                    <button className="btn-delete" onClick={() => handleDeleteWaterSignup(s.id)}>Smazat</button>
                   </td>
                 </tr>
               ))}

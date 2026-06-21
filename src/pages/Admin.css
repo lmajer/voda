@@ -194,3 +194,28 @@
 .admin-form button:hover {
   background: #a93226;
 }
+
+.btn-edit {
+  background: none;
+  border: 1px solid var(--sand);
+  color: var(--sand);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 8px;
+}
+
+.btn-edit:hover {
+  background: var(--sand);
+  color: var(--dark);
+}
+
+.admin-rank-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: var(--dark);
+  color: var(--white);
+  font-size: 0.9rem;
+}
