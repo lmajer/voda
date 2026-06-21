@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Admin.css";
 
@@ -9,16 +9,23 @@ export default function Admin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
+  const [pastEvents, setPastEvents] = useState([]);
+  const [waterSignups, setWaterSignups] = useState([]);
+
   const [activeTab, setActiveTab] = useState("events");
+
   const [newEvent, setNewEvent] = useState({
     title: "", date: "", location: "", description: "", price: "", active: true
   });
 
-  const [waterSignups, setWaterSignups] = useState([]);
+  const [newPast, setNewPast] = useState({
+    year: "", title: "", description: "", youtubeUrl: ""
+  });
 
-useEffect(() => {
+  useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
@@ -33,22 +40,24 @@ useEffect(() => {
     setRegistrations(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
 
-  const [newPast, setNewPast] = useState({
-    year: "", title: "", description: "", youtubeUrl: ""
-  });
-
-  useEffect(() => {
-    if (user) {
-      fetchEvents();
-      fetchRegistrations();
-      fetchWaterSignups();
-    }
-  }, [user]);
+  const fetchPastEvents = async () => {
+    const snapshot = await getDocs(collection(db, "pastEvents"));
+    setPastEvents(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
 
   const fetchWaterSignups = async () => {
     const snapshot = await getDocs(collection(db, "waterSignups"));
     setWaterSignups(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchEvents();
+      fetchRegistrations();
+      fetchPastEvents();
+      fetchWaterSignups();
+    }
+  }, [user]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -59,15 +68,6 @@ useEffect(() => {
       setError("Špatný email nebo heslo.");
     }
   };
-
-  const handleAddPast = async (e) => {
-    e.preventDefault();
-    await addDoc(collection(db, "pastEvents"), {
-      ...newPast,
-      year: Number(newPast.year),
-    });
-    setNewPast({ year: "", title: "", description: "", youtubeUrl: "" });
-  };  
 
   const handleAddEvent = async (e) => {
     e.preventDefault();
@@ -85,6 +85,28 @@ useEffect(() => {
       await deleteDoc(doc(db, "events", id));
       fetchEvents();
     }
+  };
+
+  const handleAddPast = async (e) => {
+    e.preventDefault();
+    await addDoc(collection(db, "pastEvents"), {
+      ...newPast,
+      year: Number(newPast.year),
+    });
+    setNewPast({ year: "", title: "", description: "", youtubeUrl: "" });
+    fetchPastEvents();
+  };
+
+  const handleDeletePast = async (id) => {
+    if (confirm("Opravdu smazat tento záznam?")) {
+      await deleteDoc(doc(db, "pastEvents", id));
+      fetchPastEvents();
+    }
+  };
+
+  const togglePaid = async (id, currentStatus) => {
+    await updateDoc(doc(db, "waterSignups", id), { paid: !currentStatus });
+    fetchWaterSignups();
   };
 
   if (!user) {
@@ -113,11 +135,12 @@ useEffect(() => {
       </div>
 
       <div className="admin-tabs">
-        <button className={activeTab === "water" ? "active" : ""} onClick={() => setActiveTab("water")}>Přihlášení na vodu</button>
         <button className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}>Akce</button>
-        <button className={activeTab === "registrations" ? "active" : ""} onClick={() => setActiveTab("registrations")}>Přihlášení</button>
-        <button className={activeTab === "add" ? "active" : ""} onClick={() => setActiveTab("add")}>+ Přidat akci</button>
-        <button className={activeTab === "past" ? "active" : ""} onClick={() => setActiveTab("past")}>+ Přidat minulouvodu</button>
+        <button className={activeTab === "registrations" ? "active" : ""} onClick={() => setActiveTab("registrations")}>Přihlášení na akce</button>
+        <button className={activeTab === "addEvent" ? "active" : ""} onClick={() => setActiveTab("addEvent")}>+ Přidat akci</button>
+        <button className={activeTab === "past" ? "active" : ""} onClick={() => setActiveTab("past")}>Minulé vody</button>
+        <button className={activeTab === "addPast" ? "active" : ""} onClick={() => setActiveTab("addPast")}>+ Přidat minulou vodu</button>
+        <button className={activeTab === "water" ? "active" : ""} onClick={() => setActiveTab("water")}>Přihlášení na Vodu 2026</button>
       </div>
 
       {activeTab === "events" && (
@@ -180,7 +203,7 @@ useEffect(() => {
         </div>
       )}
 
-      {activeTab === "add" && (
+      {activeTab === "addEvent" && (
         <div className="admin-section">
           <h2>Přidat novou akci</h2>
           <form className="admin-form" onSubmit={handleAddEvent}>
@@ -201,6 +224,36 @@ useEffect(() => {
 
       {activeTab === "past" && (
         <div className="admin-section">
+          <h2>Minulé vody</h2>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Rok</th>
+                <th>Název</th>
+                <th>Popis</th>
+                <th>YouTube</th>
+                <th>Akce</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pastEvents.map(p => (
+                <tr key={p.id}>
+                  <td>{p.year}</td>
+                  <td>{p.title}</td>
+                  <td>{p.description}</td>
+                  <td><a href={p.youtubeUrl} target="_blank" rel="noreferrer">Video</a></td>
+                  <td>
+                    <button className="btn-delete" onClick={() => handleDeletePast(p.id)}>Smazat</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeTab === "addPast" && (
+        <div className="admin-section">
           <h2>Přidat minulou vodu</h2>
           <form className="admin-form" onSubmit={handleAddPast}>
             <input placeholder="Rok (např. 2024)" type="number" value={newPast.year}
@@ -214,7 +267,7 @@ useEffect(() => {
             <button type="submit">Přidat 🎬</button>
           </form>
         </div>
-      )} 
+      )}
 
       {activeTab === "water" && (
         <div className="admin-section">
@@ -228,6 +281,7 @@ useEffect(() => {
                 <th>Střih</th>
                 <th>Délka pobytu</th>
                 <th>Doprava</th>
+                <th>Zaplaceno</th>
               </tr>
             </thead>
             <tbody>
@@ -243,12 +297,19 @@ useEffect(() => {
                       : `${s.durationFrom} – ${s.durationTo}`}
                   </td>
                   <td>{s.transport === "vlak" ? "Vlak se všemi" : "Vlastní"}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={s.paid || false}
+                      onChange={() => togglePaid(s.id, s.paid)}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      )}     
+      )}
     </div>
   );
 }

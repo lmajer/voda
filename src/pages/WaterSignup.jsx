@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
+import emailjs from "@emailjs/browser";
 import "./WaterSignup.css";
 
 export default function WaterSignup() {
@@ -21,31 +22,48 @@ export default function WaterSignup() {
     setForm({ ...form, [field]: value });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  try {
-    // Zkontroluj, jestli už ten email není přihlášený
-    const q = query(collection(db, "waterSignups"), where("email", "==", form.email.trim().toLowerCase()));
-    const existing = await getDocs(q);
+    try {
+      const emailLower = form.email.trim().toLowerCase();
 
-    if (!existing.empty) {
-      setError("Tento email je už na Vodu přihlášený. Pokud potřebuješ něco změnit, napiš nám.");
-      return;
+      const q = query(collection(db, "waterSignups"), where("email", "==", emailLower));
+      const existing = await getDocs(q);
+
+      if (!existing.empty) {
+        setError("Tento email je už na Vodu přihlášený. Pokud potřebuješ něco změnit, napiš nám.");
+        return;
+      }
+
+      await addDoc(collection(db, "waterSignups"), {
+        ...form,
+        email: emailLower,
+        paid: false,
+        createdAt: new Date(),
+      });
+
+      // Odeslání emailu s QR kódem
+      const qrUrl = `${window.location.origin}/qr-platba.png`;
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          to_email: emailLower,
+          shirt_name: form.shirtName,
+          qr_code_url: qrUrl,
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError("Něco se nepovedlo, zkus to znovu.");
     }
-
-    await addDoc(collection(db, "waterSignups"), {
-      ...form,
-      email: form.email.trim().toLowerCase(),
-      createdAt: new Date(),
-    });
-    setSubmitted(true);
-  } catch (err) {
-    console.error(err);
-    setError("Něco se nepovedlo, zkus to znovu.");
-  }
-};
+  };
 
   if (submitted) {
     return (
