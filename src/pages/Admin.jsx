@@ -16,6 +16,8 @@ export default function Admin() {
     title: "", date: "", location: "", description: "", price: "", active: true
   });
 
+  const [waterSignups, setWaterSignups] = useState([]);
+
 useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
@@ -31,12 +33,22 @@ useEffect(() => {
     setRegistrations(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
 
+  const [newPast, setNewPast] = useState({
+    year: "", title: "", description: "", youtubeUrl: ""
+  });
+
   useEffect(() => {
     if (user) {
       fetchEvents();
       fetchRegistrations();
+      fetchWaterSignups();
     }
   }, [user]);
+
+  const fetchWaterSignups = async () => {
+    const snapshot = await getDocs(collection(db, "waterSignups"));
+    setWaterSignups(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,6 +59,15 @@ useEffect(() => {
       setError("Špatný email nebo heslo.");
     }
   };
+
+  const handleAddPast = async (e) => {
+    e.preventDefault();
+    await addDoc(collection(db, "pastEvents"), {
+      ...newPast,
+      year: Number(newPast.year),
+    });
+    setNewPast({ year: "", title: "", description: "", youtubeUrl: "" });
+  };  
 
   const handleAddEvent = async (e) => {
     e.preventDefault();
@@ -92,9 +113,11 @@ useEffect(() => {
       </div>
 
       <div className="admin-tabs">
+        <button className={activeTab === "water" ? "active" : ""} onClick={() => setActiveTab("water")}>Přihlášení na vodu</button>
         <button className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}>Akce</button>
         <button className={activeTab === "registrations" ? "active" : ""} onClick={() => setActiveTab("registrations")}>Přihlášení</button>
         <button className={activeTab === "add" ? "active" : ""} onClick={() => setActiveTab("add")}>+ Přidat akci</button>
+        <button className={activeTab === "past" ? "active" : ""} onClick={() => setActiveTab("past")}>+ Přidat minulouvodu</button>
       </div>
 
       {activeTab === "events" && (
@@ -175,6 +198,57 @@ useEffect(() => {
           </form>
         </div>
       )}
+
+      {activeTab === "past" && (
+        <div className="admin-section">
+          <h2>Přidat minulou vodu</h2>
+          <form className="admin-form" onSubmit={handleAddPast}>
+            <input placeholder="Rok (např. 2024)" type="number" value={newPast.year}
+              onChange={e => setNewPast({ ...newPast, year: e.target.value })} required />
+            <input placeholder="Název (např. #Symfonie – Voda 2024)" value={newPast.title}
+              onChange={e => setNewPast({ ...newPast, title: e.target.value })} required />
+            <textarea placeholder="Popis" value={newPast.description}
+              onChange={e => setNewPast({ ...newPast, description: e.target.value })} required />
+            <input placeholder="YouTube URL" value={newPast.youtubeUrl}
+              onChange={e => setNewPast({ ...newPast, youtubeUrl: e.target.value })} required />
+            <button type="submit">Přidat 🎬</button>
+          </form>
+        </div>
+      )} 
+
+      {activeTab === "water" && (
+        <div className="admin-section">
+          <h2>Přihlášení na Vodu 2026 ({waterSignups.length})</h2>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Jméno na tričku</th>
+                <th>Email</th>
+                <th>Velikost</th>
+                <th>Střih</th>
+                <th>Délka pobytu</th>
+                <th>Doprava</th>
+              </tr>
+            </thead>
+            <tbody>
+              {waterSignups.map(s => (
+                <tr key={s.id}>
+                  <td>{s.shirtName}</td>
+                  <td>{s.email}</td>
+                  <td>{s.shirtSize}</td>
+                  <td>{s.shirtCut}</td>
+                  <td>
+                    {s.duration === "celá"
+                      ? "Celá doba"
+                      : `${s.durationFrom} – ${s.durationTo}`}
+                  </td>
+                  <td>{s.transport === "vlak" ? "Vlak se všemi" : "Vlastní"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}     
     </div>
   );
 }

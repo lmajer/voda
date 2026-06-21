@@ -12,7 +12,8 @@ export default function Navbar() {
       <div className="navbar-links">
         <Link to="/">Domů</Link>
         <Link to="/events">Akce</Link>
-        <Link to="/gallery">Galerie</Link>
+        <Link to="/past-events">Minulé vody</Link>
+        <Link to="/voda-prihlaseni">Přihlášení na vodu</Link>
       </div>
     </nav>
   );

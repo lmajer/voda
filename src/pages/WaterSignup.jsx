@@ -1,0 +1,206 @@
+import { useState } from "react";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
+import "./WaterSignup.css";
+
+export default function WaterSignup() {
+  const [form, setForm] = useState({
+    email: "",
+    shirtName: "",
+    shirtSize: "",
+    shirtCut: "pánský",
+    duration: "celá",
+    durationFrom: "",
+    durationTo: "",
+    transport: "vlak",
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (field, value) => {
+    setForm({ ...form, [field]: value });
+  };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  try {
+    // Zkontroluj, jestli už ten email není přihlášený
+    const q = query(collection(db, "waterSignups"), where("email", "==", form.email.trim().toLowerCase()));
+    const existing = await getDocs(q);
+
+    if (!existing.empty) {
+      setError("Tento email je už na Vodu přihlášený. Pokud potřebuješ něco změnit, napiš nám.");
+      return;
+    }
+
+    await addDoc(collection(db, "waterSignups"), {
+      ...form,
+      email: form.email.trim().toLowerCase(),
+      createdAt: new Date(),
+    });
+    setSubmitted(true);
+  } catch (err) {
+    console.error(err);
+    setError("Něco se nepovedlo, zkus to znovu.");
+  }
+};
+
+  if (submitted) {
+    return (
+      <div className="water-signup">
+        <div className="water-success">
+          <h1>🛶 Jsi přihlášen/a!</h1>
+          <p>Těšíme se na tebe na Vodě 2026.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="water-signup">
+      <h1>Přihlášení na Vodu 2026</h1>
+      <p className="water-subtitle">#Dekadence · 10. ročník</p>
+
+      <form className="water-form" onSubmit={handleSubmit}>
+        <label>
+          Tvůj email
+          <input
+            type="email"
+            value={form.email}
+            onChange={e => handleChange("email", e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Jméno na tričku
+          <input
+            type="text"
+            value={form.shirtName}
+            onChange={e => handleChange("shirtName", e.target.value)}
+            required
+          />
+        </label>
+
+        <label>
+          Velikost trika
+          <select
+            value={form.shirtSize}
+            onChange={e => handleChange("shirtSize", e.target.value)}
+            required
+          >
+            <option value="">Vyber velikost</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </label>
+
+        <label>Střih trika</label>
+        <div className="water-radio-group">
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="shirtCut"
+              value="pánský"
+              checked={form.shirtCut === "pánský"}
+              onChange={e => handleChange("shirtCut", e.target.value)}
+            />
+            Pánský
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="shirtCut"
+              value="dámský"
+              checked={form.shirtCut === "dámský"}
+              onChange={e => handleChange("shirtCut", e.target.value)}
+            />
+            Dámský
+          </label>
+        </div>
+
+        <label>Délka pobytu</label>
+        <div className="water-radio-group">
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="duration"
+              value="celá"
+              checked={form.duration === "celá"}
+              onChange={e => handleChange("duration", e.target.value)}
+            />
+            Jedu na celou dobu
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="duration"
+              value="část"
+              checked={form.duration === "část"}
+              onChange={e => handleChange("duration", e.target.value)}
+            />
+            Jedu jen na část
+          </label>
+        </div>
+
+        {form.duration === "část" && (
+          <div className="water-duration-range">
+            <label>
+              Od
+              <input
+                type="text"
+                placeholder="např. 15.7."
+                value={form.durationFrom}
+                onChange={e => handleChange("durationFrom", e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Do
+              <input
+                type="text"
+                placeholder="např. 18.7."
+                value={form.durationTo}
+                onChange={e => handleChange("durationTo", e.target.value)}
+                required
+              />
+            </label>
+          </div>
+        )}
+
+        <label>Doprava</label>
+        <div className="water-radio-group">
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="transport"
+              value="vlak"
+              checked={form.transport === "vlak"}
+              onChange={e => handleChange("transport", e.target.value)}
+            />
+            Jedu se všemi vlakem
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="transport"
+              value="vlastní"
+              checked={form.transport === "vlastní"}
+              onChange={e => handleChange("transport", e.target.value)}
+            />
+            Mám vlastní dopravu
+          </label>
+        </div>
+
+        {error && <p className="water-error">{error}</p>}
+
+        <button type="submit">Přihlásit se na Vodu 🛶</button>
+      </form>
+    </div>
+  );
+}
