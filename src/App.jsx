@@ -5,6 +5,7 @@ import Events from "./pages/Events";
 import PastEvents from "./pages/PastEvents";
 import Admin from "./pages/Admin";
 import WaterSignup from "./pages/WaterSignup";
+import WaterDetail from "./pages/WaterDetail";
 
 function App() {
   return (
@@ -15,7 +16,8 @@ function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/past-events" element={<PastEvents />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/voda-prihlaseni" element={<WaterSignup />} />
+        <Route path="/voda-sign-up" element={<WaterSignup />} />
+        <Route path="/voda-detail" element={<WaterDetail />} />
       </Routes>
     </BrowserRouter>
   );

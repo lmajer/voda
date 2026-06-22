@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import "./Admin.css";
 
@@ -24,8 +24,15 @@ export default function Admin() {
   });
 
   const [newPast, setNewPast] = useState({
-    year: "", title: "", description: "", youtubeUrl: ""
+    year: "", title: "", description: "", youtubeUrl: "", photoUrl: ""
   });
+  const [uploadingPastPhoto, setUploadingPastPhoto] = useState(false);
+
+  const [waterInfo, setWaterInfo] = useState({
+    title: "", dateFrom: "", dateTo: "", location: "", description: "", price: "", logoUrl: ""
+  });
+
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -51,16 +58,80 @@ export default function Admin() {
     const snapshot = await getDocs(collection(db, "waterSignups"));
     setWaterSignups(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
   };
+
+  const fetchWaterInfo = async () => {
+  const snapshot = await getDoc(doc(db, "waterEventInfo", "current"));
+  if (snapshot.exists()) setWaterInfo(snapshot.data());
+};
+
+  const handleSaveWaterInfo = async (e) => {
+    e.preventDefault();
+    await setDoc(doc(db, "waterEventInfo", "current"), {
+      ...waterInfo,
+      price: Number(waterInfo.price),
+    });
+    alert("Uloženo!");
+  };
+
   const handleDeleteWaterSignup = async (id) => {
     if (confirm("Opravdu smazat tuto přihlášku na Vodu?")) {
       await deleteDoc(doc(db, "waterSignups", id));
       fetchWaterSignups();
     }
   };
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      setWaterInfo(prev => ({ ...prev, logoUrl: data.secure_url }));
+    } catch (err) {
+      console.error("Upload selhal:", err);
+      alert("Nahrání loga se nepodařilo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const updateRank = async (id, rank) => {
+    setWaterSignups(prev =>
+      prev.map(s => (s.id === id ? { ...s, rank } : s))
+    );
     await updateDoc(doc(db, "waterSignups", id), { rank });
-    fetchWaterSignups();
+  };
+
+  const handlePastPhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingPastPhoto(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      setNewPast(prev => ({ ...prev, photoUrl: data.secure_url }));
+    } catch (err) {
+      console.error("Upload selhal:", err);
+      alert("Nahrání fotky se nepodařilo.");
+    } finally {
+      setUploadingPastPhoto(false);
+    }
   };
 
   useEffect(() => {
@@ -69,6 +140,7 @@ export default function Admin() {
       fetchRegistrations();
       fetchPastEvents();
       fetchWaterSignups();
+      fetchWaterInfo();
     }
   }, [user]);
 
@@ -114,7 +186,7 @@ export default function Admin() {
         year: Number(newPast.year),
       });
     }
-    setNewPast({ year: "", title: "", description: "", youtubeUrl: "" });
+    setNewPast({ year: "", title: "", description: "", youtubeUrl: "", photoUrl: "" });
     fetchPastEvents();
     setActiveTab("past");
   };
@@ -124,10 +196,16 @@ export default function Admin() {
       year: p.year,
       title: p.title,
       description: p.description,
-      youtubeUrl: p.youtubeUrl,
+      youtubeUrl: p.youtubeUrl || "",
+      photoUrl: p.photoUrl || "",
     });
     setEditingPast(p.id);
     setActiveTab("addPast");
+  };
+
+  const handleCancelEditPast = () => {
+    setEditingPast(null);
+    setNewPast({ year: "", title: "", description: "", youtubeUrl: "", photoUrl: "" });
   };
 
   const handleDeletePast = async (id) => {
@@ -138,8 +216,10 @@ export default function Admin() {
   };
 
   const togglePaid = async (id, currentStatus) => {
+    setWaterSignups(prev =>
+      prev.map(s => (s.id === id ? { ...s, paid: !currentStatus } : s))
+    );
     await updateDoc(doc(db, "waterSignups", id), { paid: !currentStatus });
-    fetchWaterSignups();
   };
 
   if (!user) {
@@ -174,6 +254,7 @@ export default function Admin() {
         <button className={activeTab === "past" ? "active" : ""} onClick={() => setActiveTab("past")}>Minulé vody</button>
         <button className={activeTab === "addPast" ? "active" : ""} onClick={() => setActiveTab("addPast")}>+ Přidat minulou vodu</button>
         <button className={activeTab === "water" ? "active" : ""} onClick={() => setActiveTab("water")}>Přihlášení na Vodu 2026</button>
+        <button className={activeTab === "waterInfo" ? "active" : ""} onClick={() => setActiveTab("waterInfo")}>Info o Vodě</button>
       </div>
 
       {activeTab === "events" && (
@@ -290,15 +371,44 @@ export default function Admin() {
         <div className="admin-section">
           <h2>{editingPast ? "Upravit vodu" : "Přidat minulou vodu"}</h2>
           <form className="admin-form" onSubmit={handleSubmitPast}>
+            <label className="admin-form-label">
+              Rok
+            </label>
             <input placeholder="Rok (např. 2024)" type="number" value={newPast.year}
               onChange={e => setNewPast({ ...newPast, year: e.target.value })} required />
+            <label className="admin-form-label">
+              Název
+            </label>
             <input placeholder="Název (např. #Symfonie – Voda 2024)" value={newPast.title}
               onChange={e => setNewPast({ ...newPast, title: e.target.value })} required />
+            <label className="admin-form-label">
+              Popis
+            </label>
             <textarea placeholder="Popis" value={newPast.description}
               onChange={e => setNewPast({ ...newPast, description: e.target.value })} required />
-            <input placeholder="YouTube URL" value={newPast.youtubeUrl}
-              onChange={e => setNewPast({ ...newPast, youtubeUrl: e.target.value })} required />
-            <button type="submit">{editingPast ? "Uložit změny ✏️" : "Přidat 🎬"}</button>
+            <label className="admin-form-label">
+              YouTube URL (pokud existuje)
+            </label>
+            <input placeholder="YouTube URL (nepovinné)" value={newPast.youtubeUrl}
+              onChange={e => setNewPast({ ...newPast, youtubeUrl: e.target.value })} />
+
+            <label className="admin-form-label">
+              Nebo nahraj fotku (pokud video neexistuje)
+              <input type="file" accept="image/*" onChange={handlePastPhotoUpload} />
+            </label>
+            {uploadingPastPhoto && <p>Nahrávám fotku...</p>}
+            {newPast.photoUrl && (
+              <img src={newPast.photoUrl} alt="Náhled" className="admin-logo-preview" />
+            )}
+
+            <div className="admin-form-buttons">
+              <button type="submit">{editingPast ? "Uložit změny ✏️" : "Přidat 🎬"}</button>
+              {editingPast && (
+                <button type="button" className="btn-cancel" onClick={handleCancelEditPast}>
+                  Zrušit úpravu
+                </button>
+              )}
+            </div>
           </form>
         </div>
       )}
@@ -368,6 +478,52 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {activeTab === "waterInfo" && (
+        <div className="admin-section">
+          <h2>Upravit informace o Vodě</h2>
+          <form className="admin-form" onSubmit={handleSaveWaterInfo}>
+            <input placeholder="Název (např. #Dekadence – Voda 2026)" value={waterInfo.title}
+              onChange={e => setWaterInfo({ ...waterInfo, title: e.target.value })} required />
+            <div className="admin-date-range">
+              <label className="admin-form-label">
+                Od
+                <input type="date" value={waterInfo.dateFrom}
+                  onChange={e => setWaterInfo({ ...waterInfo, dateFrom: e.target.value })} required />
+              </label>
+              <label className="admin-form-label">
+                Do
+                <input type="date" value={waterInfo.dateTo}
+                  onChange={e => setWaterInfo({ ...waterInfo, dateTo: e.target.value })} required />
+              </label>
+            </div>
+            <label className="admin-form-label">
+                Místo
+            <input placeholder="Místo" value={waterInfo.location}
+              onChange={e => setWaterInfo({ ...waterInfo, location: e.target.value })} required />
+              </label>
+              <label className="admin-form-label">
+                Popis
+            <textarea placeholder="Popis" value={waterInfo.description}
+              onChange={e => setWaterInfo({ ...waterInfo, description: e.target.value })} required />
+              </label>
+            <label className="admin-form-label">
+                Cena (Kč)
+            <input type="number" placeholder="Cena (Kč)" value={waterInfo.price}
+              onChange={e => setWaterInfo({ ...waterInfo, price: e.target.value })} required />
+              </label>
+            <label className="admin-form-label">
+                Logo
+                <input type="file" accept="image/*" onChange={handleLogoUpload} />
+              </label>
+              {uploadingLogo && <p>Nahrávám logo...</p>}
+              {waterInfo.logoUrl && (
+                <img src={waterInfo.logoUrl} alt="Náhled loga" className="admin-logo-preview" />
+              )}
+            <button type="submit">Uložit 🛶</button>
+          </form>
         </div>
       )}
     </div>

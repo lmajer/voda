@@ -167,3 +167,13 @@
   color: var(--sand);
   margin-bottom: 8px;
 }
+
+.water-card {
+  cursor: pointer;
+  border: 2px solid var(--red);
+  background: linear-gradient(135deg, var(--navy), #24375f);
+}
+
+.water-card:hover {
+  transform: translateY(-4px);
+}

@@ -39,7 +39,7 @@ export default function PastEvents() {
               <h2>{event.title}</h2>
               <p>{event.description}</p>
             </div>
-            {event.youtubeUrl && getYouTubeId(event.youtubeUrl) && (
+            {event.youtubeUrl && getYouTubeId(event.youtubeUrl) ? (
               <div className="past-video">
                 <iframe
                   src={`https://www.youtube.com/embed/${getYouTubeId(event.youtubeUrl)}`}
@@ -48,7 +48,11 @@ export default function PastEvents() {
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 />
               </div>
-            )}
+            ) : event.photoUrl ? (
+              <div className="past-video">
+                <img src={event.photoUrl} alt={event.title} className="past-photo" />
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

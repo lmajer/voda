@@ -76,6 +76,15 @@
   border: none;
 }
 
+.past-photo {
+  width: 100% !important;
+  max-height: 360px !important;
+  height: 360px !important;
+  object-fit: cover !important;
+  border-radius: 12px;
+  display: block;
+}
+
 @media (max-width: 700px) {
   .past-card,
   .past-card:nth-child(even) {

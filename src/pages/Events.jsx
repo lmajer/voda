@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, getDocs, addDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import "./Events.css";
@@ -19,6 +20,8 @@ export default function Events() {
     };
     fetchEvents();
   }, []);
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +46,13 @@ export default function Events() {
   return (
     <div className="events">
       <h1>Nadcházející akce</h1>
+
+      <div className="event-card water-card" onClick={() => navigate("/voda-detail")}>
+        <div className="event-card-header">
+          <h2>🛶 Voda 2026 · #Dekadence</h2>
+        </div>
+        <p className="event-description">Hlavní akce roku! Klikni pro detail a přihlášení.</p>
+      </div>
 
       <div className="events-grid">
         {events.map(event => (

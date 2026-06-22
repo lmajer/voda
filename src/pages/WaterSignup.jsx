@@ -44,10 +44,10 @@ export default function WaterSignup() {
         createdAt: new Date(),
       });
 
-      // Odeslání emailu s QR kódem
-      const qrUrl = `${window.location.origin}/qr-platba.png`;
+      setSubmitted(true);
 
-      await emailjs.send(
+      const qrUrl = `${window.location.origin}/qr-platba.png`;
+      emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
         {
@@ -56,9 +56,8 @@ export default function WaterSignup() {
           qr_code_url: qrUrl,
         },
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      );
+      ).catch(err => console.error("Email se nepodařilo odeslat:", err));
 
-      setSubmitted(true);
     } catch (err) {
       console.error(err);
       setError("Něco se nepovedlo, zkus to znovu.");
