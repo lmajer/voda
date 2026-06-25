@@ -9,10 +9,11 @@ export default function WaterSignup() {
     email: "",
     shirtName: "",
     shirtSize: "",
+    tent: "",
+    student: "ne",
     shirtCut: "pánský",
     duration: "celá",
-    durationFrom: "",
-    durationTo: "",
+    durationSpecification: "",
     transport: "vlak",
   });
   const [submitted, setSubmitted] = useState(false);
@@ -99,7 +100,6 @@ export default function WaterSignup() {
             required
           />
         </label>
-
         <label>
           Velikost trika
           <select
@@ -116,7 +116,29 @@ export default function WaterSignup() {
             <option value="XXL">XXL</option>
           </select>
         </label>
-
+        <label>Jsem student do 26 let a mám platný studentký průkaz</label>
+        <div className="water-radio-group">
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="student"
+              value="ano"
+              checked={form.student === "ano"}
+              onChange={e => handleChange("student", e.target.value)}
+            />
+            Ano
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="student"
+              value="ne"
+              checked={form.student === "ne"}
+              onChange={e => handleChange("student", e.target.value)}
+            />
+            Ne
+          </label>
+        </div>
         <label>Střih trika</label>
         <div className="water-radio-group">
           <label className="water-radio">
@@ -141,6 +163,7 @@ export default function WaterSignup() {
           </label>
         </div>
 
+
         <label>Délka pobytu</label>
         <div className="water-radio-group">
           <label className="water-radio">
@@ -164,26 +187,17 @@ export default function WaterSignup() {
             Jedu jen na část
           </label>
         </div>
+        
 
         {form.duration === "část" && (
           <div className="water-duration-range">
             <label>
-              Od
+              Specifikuj jak pojedeš
               <input
                 type="text"
-                placeholder="např. 15.7."
-                value={form.durationFrom}
-                onChange={e => handleChange("durationFrom", e.target.value)}
-                required
-              />
-            </label>
-            <label>
-              Do
-              <input
-                type="text"
-                placeholder="např. 18.7."
-                value={form.durationTo}
-                onChange={e => handleChange("durationTo", e.target.value)}
+                placeholder="Např. pouze 1. a 2. den"
+                value={form.durationSpecification}
+                onChange={e => handleChange("durationSpecification", e.target.value)}
                 required
               />
             </label>
@@ -200,7 +214,27 @@ export default function WaterSignup() {
               checked={form.transport === "vlak"}
               onChange={e => handleChange("transport", e.target.value)}
             />
-            Jedu se všemi vlakem
+            Jedu se všemi vlakem tam i zpět
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="transport"
+              value="vlakZpet"
+              checked={form.transport === "vlakZpet"}
+              onChange={e => handleChange("transport", e.target.value)}
+            />
+            Jedu se všemi vlakem jen zpět
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="transport"
+              value="vlakTam"
+              checked={form.transport === "vlakTam"}
+              onChange={e => handleChange("transport", e.target.value)}
+            />
+            Jedu se všemi vlakem jen tam
           </label>
           <label className="water-radio">
             <input

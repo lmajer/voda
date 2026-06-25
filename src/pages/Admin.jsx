@@ -423,6 +423,7 @@ export default function Admin() {
                 <th>Jméno na tričku</th>
                 <th>Email</th>
                 <th>Velikost</th>
+                <th>Student</th>
                 <th>Střih</th>
                 <th>Délka pobytu</th>
                 <th>Doprava</th>
@@ -458,10 +459,11 @@ export default function Admin() {
                   <td>{s.email}</td>
                   <td>{s.shirtSize}</td>
                   <td>{s.shirtCut}</td>
+                  <td>{s.student === "ano" ? "Ano" : "Ne"}</td>
                   <td>
                     {s.duration === "celá"
                       ? "Celá doba"
-                      : `${s.durationFrom} – ${s.durationTo}`}
+                      : `${s.durationSpecification || "Specifikuj délku"}`}
                   </td>
                   <td>{s.transport === "vlak" ? "Vlak se všemi" : "Vlastní"}</td>
                   <td>
