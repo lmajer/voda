@@ -6,6 +6,7 @@ import PastEvents from "./pages/PastEvents";
 import Admin from "./pages/Admin";
 import WaterSignup from "./pages/WaterSignup";
 import WaterDetail from "./pages/WaterDetail";
+import Tents from "./pages/Tents";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/voda-sign-up" element={<WaterSignup />} />
         <Route path="/voda-detail" element={<WaterDetail />} />
+        <Route path="/tents" element={<Tents />} />
       </Routes>
     </BrowserRouter>
   );

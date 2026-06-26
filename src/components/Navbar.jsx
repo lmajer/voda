@@ -44,6 +44,7 @@ export default function Navbar() {
         <Link to="/events" onClick={closeMenu}>Akce</Link>
         <Link to="/past-events" onClick={closeMenu}>Minulé vody</Link>
         <Link to="/voda-sign-up" onClick={closeMenu}>Přihlášení na vodu</Link>
+        <Link to="/tents" onClick={closeMenu}>Stany</Link>
       </div>
     </nav>
   );

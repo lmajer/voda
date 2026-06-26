@@ -125,6 +125,13 @@ export default function Admin() {
         { method: "POST", body: formData }
       );
       const data = await res.json();
+
+      if (!res.ok || !data.secure_url) {
+        console.error("Cloudinary error:", data);
+        alert("Nahrání fotky se nepodařilo: " + (data.error?.message || "neznámá chyba"));
+        return;
+      }
+
       setNewPast(prev => ({ ...prev, photoUrl: data.secure_url }));
     } catch (err) {
       console.error("Upload selhal:", err);
@@ -133,7 +140,6 @@ export default function Admin() {
       setUploadingPastPhoto(false);
     }
   };
-
   useEffect(() => {
     if (user) {
       fetchEvents();
@@ -423,8 +429,8 @@ export default function Admin() {
                 <th>Jméno na tričku</th>
                 <th>Email</th>
                 <th>Velikost</th>
-                <th>Student</th>
                 <th>Střih</th>
+                <th>Student</th>
                 <th>Délka pobytu</th>
                 <th>Doprava</th>
                 <th>Zaplaceno</th>

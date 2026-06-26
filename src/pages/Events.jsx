@@ -46,19 +46,25 @@ export default function Events() {
   return (
     <div className="events">
       <h1>Nadcházející akce</h1>
+      <br/>
+      <h2>Hlavní akce</h2>
+      <br/>
 
       <div className="event-card water-card" onClick={() => navigate("/voda-detail")}>
         <div className="event-card-header">
-          <h2>🛶 Voda 2026 · #Dekadence</h2>
+          <h3>🛶 Voda 2026 · #Dekadence</h3>
         </div>
         <p className="event-description">Hlavní akce roku! Klikni pro detail a přihlášení.</p>
       </div>
-
+      
+      <br/>
+      <h2>Ostatní akce</h2>
+      <br/>
       <div className="events-grid">
         {events.map(event => (
           <div key={event.id} className="event-card">
             <div className="event-card-header">
-              <h2>{event.title}</h2>
+              <h3>{event.title}</h3>
               <span className="event-price">{event.price} Kč</span>
             </div>
             <p className="event-date">📅 {event.date}</p>

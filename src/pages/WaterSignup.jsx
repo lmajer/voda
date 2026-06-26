@@ -70,7 +70,7 @@ export default function WaterSignup() {
       <div className="water-signup">
         <div className="water-success">
           <h1>🛶 Jsi přihlášen/a!</h1>
-          <p>Těšíme se na tebe na Vodě 2026.</p>
+          <p>Těšíme se na tebe na Vodě 2026. <br />Do e-mailu jsme ti zaslali informace o placení. Podívej se i do spamu.</p>
         </div>
       </div>
     );
@@ -116,29 +116,6 @@ export default function WaterSignup() {
             <option value="XXL">XXL</option>
           </select>
         </label>
-        <label>Jsem student do 26 let a mám platný studentký průkaz</label>
-        <div className="water-radio-group">
-          <label className="water-radio">
-            <input
-              type="radio"
-              name="student"
-              value="ano"
-              checked={form.student === "ano"}
-              onChange={e => handleChange("student", e.target.value)}
-            />
-            Ano
-          </label>
-          <label className="water-radio">
-            <input
-              type="radio"
-              name="student"
-              value="ne"
-              checked={form.student === "ne"}
-              onChange={e => handleChange("student", e.target.value)}
-            />
-            Ne
-          </label>
-        </div>
         <label>Střih trika</label>
         <div className="water-radio-group">
           <label className="water-radio">
@@ -220,16 +197,6 @@ export default function WaterSignup() {
             <input
               type="radio"
               name="transport"
-              value="vlakZpet"
-              checked={form.transport === "vlakZpet"}
-              onChange={e => handleChange("transport", e.target.value)}
-            />
-            Jedu se všemi vlakem jen zpět
-          </label>
-          <label className="water-radio">
-            <input
-              type="radio"
-              name="transport"
               value="vlakTam"
               checked={form.transport === "vlakTam"}
               onChange={e => handleChange("transport", e.target.value)}
@@ -240,11 +207,44 @@ export default function WaterSignup() {
             <input
               type="radio"
               name="transport"
+              value="vlakZpet"
+              checked={form.transport === "vlakZpet"}
+              onChange={e => handleChange("transport", e.target.value)}
+            />
+            Jedu se všemi vlakem jen zpět
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="transport"
               value="vlastní"
               checked={form.transport === "vlastní"}
               onChange={e => handleChange("transport", e.target.value)}
             />
             Mám vlastní dopravu
+          </label>
+        </div>
+        <label>Jsem student do 26 let a mám platný studentký průkaz</label>
+        <div className="water-radio-group">
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="student"
+              value="ano"
+              checked={form.student === "ano"}
+              onChange={e => handleChange("student", e.target.value)}
+            />
+            Ano
+          </label>
+          <label className="water-radio">
+            <input
+              type="radio"
+              name="student"
+              value="ne"
+              checked={form.student === "ne"}
+              onChange={e => handleChange("student", e.target.value)}
+            />
+            Ne
           </label>
         </div>
 
