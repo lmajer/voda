@@ -70,7 +70,7 @@ export default function WaterSignup() {
       <div className="water-signup">
         <div className="water-success">
           <h1>🛶 Jsi přihlášen/a!</h1>
-          <p>Těšíme se na tebe na Vodě 2026. <br />Do e-mailu jsme ti zaslali informace o placení. Podívej se i do spamu.</p>
+          <p>Těšíme se na tebe na Vodě 2026. <br />Do e-mailu jsme ti zaslali informace o placení. <br />Podívej se i do spamu. Pokud to skutečně skončilo ve spamu, tak to označ, že to není spam a příště by to mělo příjít normálně.</p>
         </div>
       </div>
     );
