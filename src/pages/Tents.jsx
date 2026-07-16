@@ -40,7 +40,7 @@ export default function Tents() {
     const snapshot = await getDocs(q);
 
     if (snapshot.empty) {
-      setCheckError("Tento email není přihlášený na Vodu 2026. Zkontroluj, jestli jsi se přihlásil/a.");
+      setCheckError("Tento e-mail není přihlášený na Vodu 2026. Zkontroluj, jestli jsi se přihlásil/a.");
       setChecking(false);
       return;
     }
@@ -111,11 +111,11 @@ export default function Tents() {
       <div className="tents-verify">
         <div className="tents-verify-box">
           <h1>⛺ Stany</h1>
-          <p>Zadej email, kterým ses přihlásil/a na Vodu 2026.</p>
+          <p>Zadej e-mail, kterým ses přihlásil/a na Vodu 2026.</p>
           <form onSubmit={handleVerify}>
             <input
               type="email"
-              placeholder="Tvůj email"
+              placeholder="Tvůj e-mail"
               value={checkEmail}
               onChange={e => setCheckEmail(e.target.value)}
               required

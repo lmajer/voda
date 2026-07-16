@@ -156,7 +156,7 @@ export default function Admin() {
       await signInWithEmailAndPassword(auth, email, password);
       setError("");
     } catch {
-      setError("Špatný email nebo heslo.");
+      setError("Špatný e-mail nebo heslo.");
     }
   };
 
@@ -234,7 +234,7 @@ export default function Admin() {
         <div className="admin-login-box">
           <h1>🏴‍☠️ Admin</h1>
           <form onSubmit={handleLogin}>
-            <input type="email" placeholder="Email" value={email}
+            <input type="email" placeholder="E-mail" value={email}
               onChange={e => setEmail(e.target.value)} required />
             <input type="password" placeholder="Heslo" value={password}
               onChange={e => setPassword(e.target.value)} required />
@@ -302,7 +302,7 @@ export default function Admin() {
             <thead>
               <tr>
                 <th>Jméno</th>
-                <th>Email</th>
+                <th>E-mail</th>
                 <th>Akce</th>
                 <th>Zaplaceno</th>
                 <th>Datum přihlášení</th>
@@ -427,7 +427,7 @@ export default function Admin() {
               <tr>
                 <th>Hodnost</th>
                 <th>Jméno na tričku</th>
-                <th>Email</th>
+                <th>E-mail</th>
                 <th>Velikost</th>
                 <th>Střih</th>
                 <th>Student</th>

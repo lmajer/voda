@@ -94,7 +94,7 @@ export default function Events() {
                 />
                 <input
                   type="email"
-                  placeholder="Tvůj email"
+                  placeholder="Tvůj e-mail"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   required

@@ -34,7 +34,7 @@ export default function WaterSignup() {
       const existing = await getDocs(q);
 
       if (!existing.empty) {
-        setError("Tento email je už na Vodu přihlášený. Pokud potřebuješ něco změnit, napiš nám.");
+        setError("Tento e-mail je už na Vodu přihlášený. Pokud potřebuješ něco změnit, napiš nám.");
         return;
       }
 
@@ -57,7 +57,7 @@ export default function WaterSignup() {
           qr_code_url: qrUrl,
         },
         import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-      ).catch(err => console.error("Email se nepodařilo odeslat:", err));
+      ).catch(err => console.error("E-mail se nepodařilo odeslat:", err));
 
     } catch (err) {
       console.error(err);
@@ -83,7 +83,7 @@ export default function WaterSignup() {
 
       <form className="water-form" onSubmit={handleSubmit}>
         <label>
-          Tvůj email
+          Tvůj e-mail
           <input
             type="email"
             value={form.email}
