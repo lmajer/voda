@@ -244,3 +244,13 @@
 .admin-date-range .admin-form-label {
   flex: 1;
 }
+
+.admin-transport-summary {
+  margin-top: 40px;
+}
+
+.admin-transport-summary h3 {
+  color: var(--sand);
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}

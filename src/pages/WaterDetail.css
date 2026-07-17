@@ -54,3 +54,8 @@
   padding: 64px;
   color: var(--sand);
 }
+
+.event-description,
+.water-detail-description {
+  white-space: pre-line;
+}

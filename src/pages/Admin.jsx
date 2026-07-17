@@ -20,8 +20,10 @@ export default function Admin() {
   const [editingPast, setEditingPast] = useState(null);
 
   const [newEvent, setNewEvent] = useState({
-    title: "", date: "", location: "", description: "", price: "", active: true
+    title: "", date: "", time: "", location: "", description: "", price: "", active: true
   });
+
+  const [editingEvent, setEditingEvent] = useState(null);
 
   const [newPast, setNewPast] = useState({
     year: "", title: "", description: "", youtubeUrl: "", photoUrl: ""
@@ -103,6 +105,25 @@ export default function Admin() {
     }
   };
 
+    const handleEditEvent = (event) => {
+    setNewEvent({
+      title: event.title,
+      date: event.date,
+      time: event.time || "",
+      location: event.location,
+      description: event.description,
+      price: event.price,
+      active: event.active,
+    });
+    setEditingEvent(event.id);
+    setActiveTab("addEvent");
+  };
+
+  const handleCancelEditEvent = () => {
+    setEditingEvent(null);
+    setNewEvent({ title: "", date: "", time: "", location: "", description: "", price: "", active: true });
+  };
+
   const updateRank = async (id, rank) => {
     setWaterSignups(prev =>
       prev.map(s => (s.id === id ? { ...s, rank } : s))
@@ -162,13 +183,22 @@ export default function Admin() {
 
   const handleAddEvent = async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "events"), {
-      ...newEvent,
-      price: Number(newEvent.price),
-      active: true,
-    });
-    setNewEvent({ title: "", date: "", location: "", description: "", price: "", active: true });
+    if (editingEvent) {
+      await updateDoc(doc(db, "events", editingEvent), {
+        ...newEvent,
+        price: Number(newEvent.price),
+      });
+      setEditingEvent(null);
+    } else {
+      await addDoc(collection(db, "events"), {
+        ...newEvent,
+        price: Number(newEvent.price),
+        active: true,
+      });
+    }
+    setNewEvent({ title: "", date: "", time: "", location: "", description: "", price: "", active: true });
     fetchEvents();
+    setActiveTab("events");
   };
 
   const handleDeleteEvent = async (id) => {
@@ -271,6 +301,7 @@ export default function Admin() {
               <tr>
                 <th>Název</th>
                 <th>Datum</th>
+                <th>Čas</th>
                 <th>Místo</th>
                 <th>Cena</th>
                 <th>Aktivní</th>
@@ -282,10 +313,12 @@ export default function Admin() {
                 <tr key={event.id}>
                   <td>{event.title}</td>
                   <td>{event.date}</td>
+                  <td>{event.time || "—"}</td>
                   <td>{event.location}</td>
                   <td>{event.price} Kč</td>
                   <td>{event.active ? "✅" : "❌"}</td>
                   <td>
+                    <button className="btn-edit" onClick={() => handleEditEvent(event)}>Upravit</button>
                     <button className="btn-delete" onClick={() => handleDeleteEvent(event.id)}>Smazat</button>
                   </td>
                 </tr>
@@ -325,19 +358,36 @@ export default function Admin() {
 
       {activeTab === "addEvent" && (
         <div className="admin-section">
-          <h2>Přidat novou akci</h2>
+          <h2>{editingEvent ? "Upravit akci" : "Přidat novou akci"}</h2>
           <form className="admin-form" onSubmit={handleAddEvent}>
             <input placeholder="Název akce" value={newEvent.title}
               onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} required />
-            <input type="date" value={newEvent.date}
-              onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} required />
+            <div className="admin-date-range">
+              <label className="admin-form-label">
+                Datum
+                <input type="date" value={newEvent.date}
+                  onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} required />
+              </label>
+              <label className="admin-form-label">
+                Čas
+                <input type="time" value={newEvent.time}
+                  onChange={e => setNewEvent({ ...newEvent, time: e.target.value })} />
+              </label>
+            </div>
             <input placeholder="Místo" value={newEvent.location}
               onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} required />
             <textarea placeholder="Popis" value={newEvent.description}
               onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} required />
             <input type="number" placeholder="Cena (Kč)" value={newEvent.price}
               onChange={e => setNewEvent({ ...newEvent, price: e.target.value })} required />
-            <button type="submit">Přidat akci 🛶</button>
+            <div className="admin-form-buttons">
+              <button type="submit">{editingEvent ? "Uložit změny ✏️" : "Přidat akci 🛶"}</button>
+              {editingEvent && (
+                <button type="button" className="btn-cancel" onClick={handleCancelEditEvent}>
+                  Zrušit úpravu
+                </button>
+              )}
+            </div>
           </form>
         </div>
       )}
@@ -471,7 +521,14 @@ export default function Admin() {
                       ? "Celá doba"
                       : `${s.durationSpecification || "Specifikuj délku"}`}
                   </td>
-                  <td>{s.transport === "vlak" ? "Vlak se všemi" : "Vlastní"}</td>
+                  <td>
+                    {{
+                      "vlak": "Vlak tam i zpět",
+                      "vlakTam": "Vlak jen tam",
+                      "vlakZpet": "Vlak jen zpět",
+                      "vlastní": "Vlastní doprava",
+                    }[s.transport] || s.transport || "—"}
+                  </td>
                   <td>
                     <input
                       type="checkbox"
@@ -486,6 +543,48 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+          {(() => {
+            const tam = waterSignups.filter(s =>
+              s.transport === "vlak" || s.transport === "vlakTam"
+            );
+            const zpet = waterSignups.filter(s =>
+              s.transport === "vlak" || s.transport === "vlakZpet"
+            );
+            const tamStudenti = tam.filter(s => s.student === "ano").length;
+            const tamOstatni = tam.filter(s => s.student !== "ano").length;
+            const zpetStudenti = zpet.filter(s => s.student === "ano").length;
+            const zpetOstatni = zpet.filter(s => s.student !== "ano").length;
+
+            return (
+              <div className="admin-transport-summary">
+                <h3>Souhrn dopravy vlakem</h3>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Směr</th>
+                      <th>Bez studentské slevy</th>
+                      <th>Se studentskou slevou</th>
+                      <th>Celkem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>🚂 Tam</td>
+                      <td>{tamOstatni}</td>
+                      <td>{tamStudenti}</td>
+                      <td>{tamOstatni + tamStudenti}</td>
+                    </tr>
+                    <tr>
+                      <td>🚂 Zpět</td>
+                      <td>{zpetOstatni}</td>
+                      <td>{zpetStudenti}</td>
+                      <td>{zpetOstatni + zpetStudenti}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -36,7 +36,7 @@ export default function WaterDetail() {
       <h1>{info.title}</h1>
       <p className="water-detail-meta">📅 {formatDateRange(info.dateFrom, info.dateTo)} · 📍 {info.location}</p>
       <p className="water-detail-price">{info.price} Kč</p>
-      <p className="water-detail-description">{info.description}</p>
+      <p className="water-detail-description" style={{ whiteSpace: "pre-line" }}>{info.description}</p>
       <button className="water-detail-btn" onClick={() => navigate("/voda-sign-up")}>
         Přihlásit se na Vodu 🛶
       </button>

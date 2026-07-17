@@ -67,9 +67,9 @@ export default function Events() {
               <h3>{event.title}</h3>
               <span className="event-price">{event.price} Kč</span>
             </div>
-            <p className="event-date">📅 {event.date}</p>
+            <p className="event-date">📅 {event.date}{event.time ? ` · ⏰ ${event.time}` : ""}</p>
             <p className="event-location">📍 {event.location}</p>
-            <p className="event-description">{event.description}</p>
+            <p className="event-description" style={{ whiteSpace: "pre-line" }}>{event.description}</p>
             <button className="event-btn" onClick={() => { setSelected(event); setSubmitted(false); }}>
               Přihlásit se
             </button>

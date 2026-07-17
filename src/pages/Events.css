@@ -177,3 +177,8 @@
 .water-card:hover {
   transform: translateY(-4px);
 }
+
+.event-description,
+.water-detail-description {
+  white-space: pre-line;
+}
